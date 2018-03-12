@@ -7,6 +7,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -20,15 +22,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class LocationNotificationActivity extends FragmentActivity implements OnMapReadyCallback {
+public class LocationNotificationActivity extends FragmentActivity implements View.OnClickListener, OnMapReadyCallback {
 
-    boolean mRequestingLocationUpdates;
+    private final static String REQUESTING_LOCATION_UPDATES_KEY = "REQUESTING_LOCATION_UPDATES_KEY";
+    private boolean mRequestingLocationUpdates;
     private LocationRequest mLocationRequest;
     private GoogleMap mGoogleMap;
     private LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
-    private final static String REQUESTING_LOCATION_UPDATES_KEY = "REQUESTING_LOCATION_UPDATES_KEY";
     private LatLng mLatLng;
+    private Button mAddButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +43,8 @@ public class LocationNotificationActivity extends FragmentActivity implements On
         createLocationRequest();
         createLocationCallback();
         updateValuesFromBundle(savedInstanceState);
-
+        mAddButton = findViewById(R.id.button_add);
+        mAddButton.setOnClickListener(this);
     }
 
     @Override
@@ -132,6 +136,19 @@ public class LocationNotificationActivity extends FragmentActivity implements On
     }
 
     public void print(final String message) {
-        Log.d("LocationNotificationActivity", message);
+        Log.d("LocationNotification", message);
+    }
+
+    @Override
+    public void onClick(View v) {
+        print("onClick");
+        if (v == mAddButton) {
+            addMarker();
+        }
+    }
+
+    private void addMarker() {
+        print("addMarker");
+        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(-34,151.001)).title("new maker").draggable(true));
     }
 }

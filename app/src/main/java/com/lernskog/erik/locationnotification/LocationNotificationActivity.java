@@ -17,6 +17,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -41,9 +42,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     private GoogleMap mGoogleMap;
     private LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
-    //private LatLng mLatLng;
-    //private Location mLocation;
     private Button mAddButton;
+    private TextView mLatitudeTextView;
+    private TextView mLongitudeTextView;
     private Marker mMarker;
     private double mLatitudeUser;
     private double mLongitudeUser;
@@ -59,6 +60,8 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mapFragment.getMapAsync(this);
         mAddButton = findViewById(R.id.button_add);
         mAddButton.setOnClickListener(this);
+        mLatitudeTextView = findViewById(R.id.textview_latitude);
+        mLongitudeTextView = findViewById(R.id.textview_longitude);
         createLocationRequest();
         createLocationCallback();
         updateValuesFromBundle(savedInstanceState);
@@ -75,8 +78,27 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
         mGoogleMap.getUiSettings().setCompassEnabled(true);
         mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
+
+        mGoogleMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+                print("onMarkerDragStart");
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+                print("onMarkerDrag");
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                print("onMarkerDragEnd");
+                mMarker = marker;
+            }
+        });
+
         //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
-        if (mLatitudeMarker != 0) {
+        if ((mLatitudeMarker != 0) && (mLongitudeMarker != 0)) {
             addMarker(mLatitudeMarker, mLongitudeUser);
         }
     }
@@ -111,7 +133,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
-                    //mLocation = location;
                     mLatitudeUser = location.getLatitude();
                     mLongitudeUser = location.getLongitude();
                     //mLatLng = new LatLng(location.getLatitude(), location.getLongitude());
@@ -125,6 +146,19 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void verifyDistance() {
         print("verifyDistance");
+        if (mMarker != null) {
+            print("marker exist");
+            mLongitudeMarker = mMarker.getPosition().longitude;
+            mLatitudeMarker = mMarker.getPosition().latitude;
+            mMarker.setTitle("Latitude " + String.valueOf(mLatitudeMarker) + " Longitude " + String.valueOf(mLongitudeMarker));
+            mMarker.setSnippet("Latitude " + String.valueOf(mLatitudeUser) + " Longitude " + String.valueOf(mLongitudeUser));
+        } else {
+            print("marker does not exist");
+            return;
+        }
+        mLatitudeTextView.setText(String.valueOf(mLatitudeMarker));
+        mLongitudeTextView.setText(String.valueOf(mLongitudeMarker));
+
         Location markerLocation = new Location("marker");
         markerLocation.setLongitude(mLongitudeMarker);
         markerLocation.setLatitude(mLatitudeMarker);

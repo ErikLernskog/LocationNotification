@@ -45,11 +45,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     private Button mAddButton;
     private TextView mLatitudeTextView;
     private TextView mLongitudeTextView;
-    private Marker mMarker;
-    private double mLatitudeUser;
-    private double mLongitudeUser;
-    private double mLatitudeMarker;
-    private double mLongitudeMarker;
+
+    private User mUser;
+    private Position mPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +63,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         createLocationRequest();
         createLocationCallback();
         updateValuesFromBundle(savedInstanceState);
+        mUser = new User();
     }
 
     @Override
@@ -99,7 +98,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
         //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
         if ((mLatitudeMarker != 0) && (mLongitudeMarker != 0)) {
-            addMarker(mLatitudeMarker, mLongitudeUser);
+            addMarker(mUser.mLatitude, mUser.mLongitude);
         }
     }
 
@@ -133,8 +132,8 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
-                    mLatitudeUser = location.getLatitude();
-                    mLongitudeUser = location.getLongitude();
+                    mUser.mLatitude = location.getLatitude();
+                    mUser.mLongitude = location.getLongitude();
                     //mLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                     //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
                     print("locationResult " + location.getProvider());
@@ -151,7 +150,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
             mLongitudeMarker = mMarker.getPosition().longitude;
             mLatitudeMarker = mMarker.getPosition().latitude;
             mMarker.setTitle("Latitude " + String.valueOf(mLatitudeMarker) + " Longitude " + String.valueOf(mLongitudeMarker));
-            mMarker.setSnippet("Latitude " + String.valueOf(mLatitudeUser) + " Longitude " + String.valueOf(mLongitudeUser));
+            mMarker.setSnippet("Latitude " + String.valueOf(mUser.mLatitude) + " Longitude " + String.valueOf(mUser.mLongitude));
         } else {
             print("marker does not exist");
             return;
@@ -163,8 +162,8 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         markerLocation.setLongitude(mLongitudeMarker);
         markerLocation.setLatitude(mLatitudeMarker);
         Location userLocation = new Location("user");
-        userLocation.setLongitude(mLongitudeUser);
-        userLocation.setLatitude(mLatitudeUser);
+        userLocation.setLongitude(mUser.mLongitude);
+        userLocation.setLatitude(mUser.mLatitude);
         float distance = userLocation.distanceTo(markerLocation);
         print("distance " + distance);
         if (distance < 1.0) {
@@ -228,7 +227,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     public void onClick(View v) {
         print("onClick");
         if (v == mAddButton) {
-            addMarker(mLatitudeUser, mLongitudeUser);
+            addMarker(mUser.mLatitude, mUser.mLongitude);
         }
     }
 

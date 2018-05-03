@@ -29,12 +29,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class LocationNotificationActivity extends FragmentActivity implements View.OnClickListener, OnMapReadyCallback {
 
@@ -65,6 +63,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         createLocationRequest();
         createLocationCallback();
         updateValuesFromBundle(savedInstanceState);
+        mPositions = new Positions(this);
     }
 
     @Override
@@ -93,14 +92,17 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 print("onMarkerDragEnd id:" + marker.getId());
-                //mPosition.mMarker = marker;
             }
         });
-
-        //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
-        //if (mPosition != null) {
-        //    addMarker(mUser.mLatitude, mUser.mLongitude);
-        //}
+        addMarker(59.858300, 17.647447); //uppsala
+        addMarker(59.725714, 17.786876); //knivsta
+        addMarker(59.646835, 17.924055); //arlanda
+        addMarker(59.521715, 17.899513); //upplandsvasby
+        addMarker(59.476302, 17.914430); //rotebro
+        addMarker(59.458144, 17.924387); //norrviken
+        addMarker(59.444316, 17.932369); //haggvik
+        addMarker(59.428758, 17.948076); //sollentuna
+        addMarker(59.409615, 17.961873); //helenelund
     }
 
     @Override
@@ -138,8 +140,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                 for (Location location : locationResult.getLocations()) {
                     mUser.mLatitude = location.getLatitude();
                     mUser.mLongitude = location.getLongitude();
-                    //mLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
+                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
                     print("onLocationResult " + location.getProvider());
                     verifyDistance();
                 }
@@ -150,31 +151,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     private void verifyDistance() {
         print("verifyDistance");
         mPositions.verifiyDistance(mUser);
-        //if (mPosition != null) {
-        //    print("marker exist");
-        //    mPosition.mMarker.setTitle("Latitude " + String.valueOf(mPosition.mLatitude) + " Longitude " + String.valueOf(mPosition.mLongitude));
-        //    mPosition.mMarker.setSnippet("Latitude " + String.valueOf(mUser.mLatitude) + " Longitude " + String.valueOf(mUser.mLongitude));
-        //} else {
-        //    print("marker does not exist");
-        //    return;
-        //}
-//        print("user Latitude " + mUser.mLatitude + " Longitude " + mUser.mLongitude);
-//        for (Position position : mPositions) {
-//            mLatitudeTextView.setText(String.valueOf(position.mLatitude));
-//            mLongitudeTextView.setText(String.valueOf(position.mLongitude));
-//            Location markerLocation = new Location("marker");
-//            markerLocation.setLongitude(position.mLongitude);
-//            markerLocation.setLatitude(position.mLatitude);
-//            Location userLocation = new Location("user");
-//            userLocation.setLongitude(mUser.mLongitude);
-//            userLocation.setLatitude(mUser.mLatitude);
-//            float distance = userLocation.distanceTo(markerLocation);
-//            print("marker id " + position.mMarker.getId() + " Latitude " + position.mLatitude + " Longitude " + position.mLongitude + " distance " + distance);
-//            if (distance < 1.0) {
-//                showNotification("Place", String.valueOf(distance));
-//                showToast("Place " + String.valueOf(distance));
-//            }
-//        }
     }
 
     @Override
@@ -248,6 +224,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         position.mLongitude = longitude;
         position.mLatitude = latitude;
         position.mMarker = mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).draggable(true));
+        position.mCircle = mGoogleMap.addCircle(new CircleOptions().center(new LatLng(latitude, longitude)).radius(position.mRadius));
         mPositions.add(position);
     }
 

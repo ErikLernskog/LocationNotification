@@ -1,14 +1,12 @@
 package com.lernskog.erik.locationnotification;
 
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.Marker;
 
 class Position {
     public Marker mMarker;
+    public Circle mCircle;
     public double mLatitude;
     public double mLongitude;
-
-    @Override
-    public String toString() {
-        return "marker id " + mMarker.getId() + " Latitude " + mLatitude + " Longitude " + mLongitude;
-    }
+    public float mRadius = 100;
 }

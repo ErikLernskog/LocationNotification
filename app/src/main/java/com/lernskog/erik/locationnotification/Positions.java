@@ -16,12 +16,14 @@ class Positions {
 
     public void add(Position position) {
         mPositions.add(position);
-        mPositions.
     }
 
     public void verifiyDistance(User user) {
         mLocationNotificationActivity.print("user Latitude " + user.mLatitude + " Longitude " + user.mLongitude);
         for (Position position : mPositions) {
+            position.mLatitude = position.mMarker.getPosition().latitude;
+            position.mLongitude = position.mMarker.getPosition().longitude;
+            position.mCircle.setCenter(position.mMarker.getPosition());
             mLocationNotificationActivity.mLatitudeTextView.setText(String.valueOf(position.mLatitude));
             mLocationNotificationActivity.mLongitudeTextView.setText(String.valueOf(position.mLongitude));
             Location markerLocation = new Location("marker");
@@ -32,7 +34,7 @@ class Positions {
             userLocation.setLatitude(user.mLatitude);
             float distance = userLocation.distanceTo(markerLocation);
             mLocationNotificationActivity.print("marker id " + position.mMarker.getId() + " Latitude " + position.mLatitude + " Longitude " + position.mLongitude + " distance " + distance);
-            if (distance < 1.0) {
+            if (distance < position.mRadius) {
                 mLocationNotificationActivity.showNotification("Place", String.valueOf(distance));
                 mLocationNotificationActivity.showToast("Place " + String.valueOf(distance));
             }

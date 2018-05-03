@@ -33,6 +33,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LocationNotificationActivity extends FragmentActivity implements View.OnClickListener, OnMapReadyCallback {
 
     private static final String TAG = LocationNotificationActivity.class.getSimpleName();
@@ -43,11 +46,10 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     private LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
     private Button mAddButton;
-    private TextView mLatitudeTextView;
-    private TextView mLongitudeTextView;
-
+    public TextView mLatitudeTextView;
+    public TextView mLongitudeTextView;
     private User mUser;
-    private Position mPosition;
+    private Positions mPositions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +65,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         createLocationRequest();
         createLocationCallback();
         updateValuesFromBundle(savedInstanceState);
-        mUser = new User();
     }
 
     @Override
@@ -91,15 +92,15 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
-                print("onMarkerDragEnd");
-                mMarker = marker;
+                print("onMarkerDragEnd id:" + marker.getId());
+                //mPosition.mMarker = marker;
             }
         });
 
         //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
-        if ((mLatitudeMarker != 0) && (mLongitudeMarker != 0)) {
-            addMarker(mUser.mLatitude, mUser.mLongitude);
-        }
+        //if (mPosition != null) {
+        //    addMarker(mUser.mLatitude, mUser.mLongitude);
+        //}
     }
 
     @Override
@@ -115,7 +116,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     protected void onPause() {
         print("onPause");
         super.onPause();
-        //stopLocationUpdates();
+        stopLocationUpdates();
     }
 
     private void stopLocationUpdates() {
@@ -131,12 +132,15 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                 if (locationResult == null) {
                     return;
                 }
+                if (mUser == null) {
+                    mUser = new User();
+                }
                 for (Location location : locationResult.getLocations()) {
                     mUser.mLatitude = location.getLatitude();
                     mUser.mLongitude = location.getLongitude();
                     //mLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                     //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
-                    print("locationResult " + location.getProvider());
+                    print("onLocationResult " + location.getProvider());
                     verifyDistance();
                 }
             }
@@ -145,41 +149,42 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void verifyDistance() {
         print("verifyDistance");
-        if (mMarker != null) {
-            print("marker exist");
-            mLongitudeMarker = mMarker.getPosition().longitude;
-            mLatitudeMarker = mMarker.getPosition().latitude;
-            mMarker.setTitle("Latitude " + String.valueOf(mLatitudeMarker) + " Longitude " + String.valueOf(mLongitudeMarker));
-            mMarker.setSnippet("Latitude " + String.valueOf(mUser.mLatitude) + " Longitude " + String.valueOf(mUser.mLongitude));
-        } else {
-            print("marker does not exist");
-            return;
-        }
-        mLatitudeTextView.setText(String.valueOf(mLatitudeMarker));
-        mLongitudeTextView.setText(String.valueOf(mLongitudeMarker));
-
-        Location markerLocation = new Location("marker");
-        markerLocation.setLongitude(mLongitudeMarker);
-        markerLocation.setLatitude(mLatitudeMarker);
-        Location userLocation = new Location("user");
-        userLocation.setLongitude(mUser.mLongitude);
-        userLocation.setLatitude(mUser.mLatitude);
-        float distance = userLocation.distanceTo(markerLocation);
-        print("distance " + distance);
-        if (distance < 1.0) {
-            showNotification("Place", String.valueOf(distance));
-            showToast("Place " + String.valueOf(distance));
-        }
+        mPositions.verifiyDistance(mUser);
+        //if (mPosition != null) {
+        //    print("marker exist");
+        //    mPosition.mMarker.setTitle("Latitude " + String.valueOf(mPosition.mLatitude) + " Longitude " + String.valueOf(mPosition.mLongitude));
+        //    mPosition.mMarker.setSnippet("Latitude " + String.valueOf(mUser.mLatitude) + " Longitude " + String.valueOf(mUser.mLongitude));
+        //} else {
+        //    print("marker does not exist");
+        //    return;
+        //}
+//        print("user Latitude " + mUser.mLatitude + " Longitude " + mUser.mLongitude);
+//        for (Position position : mPositions) {
+//            mLatitudeTextView.setText(String.valueOf(position.mLatitude));
+//            mLongitudeTextView.setText(String.valueOf(position.mLongitude));
+//            Location markerLocation = new Location("marker");
+//            markerLocation.setLongitude(position.mLongitude);
+//            markerLocation.setLatitude(position.mLatitude);
+//            Location userLocation = new Location("user");
+//            userLocation.setLongitude(mUser.mLongitude);
+//            userLocation.setLatitude(mUser.mLatitude);
+//            float distance = userLocation.distanceTo(markerLocation);
+//            print("marker id " + position.mMarker.getId() + " Latitude " + position.mLatitude + " Longitude " + position.mLongitude + " distance " + distance);
+//            if (distance < 1.0) {
+//                showNotification("Place", String.valueOf(distance));
+//                showToast("Place " + String.valueOf(distance));
+//            }
+//        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         print("onSaveInstanceState");
         outState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY, mRequestingLocationUpdates);
-        outState.putDouble("latitude", mLatitudeMarker);
-        print("store latitude " + mLatitudeMarker);
-        outState.putDouble("longitude", mLongitudeMarker);
-        print("store longitude " + mLongitudeMarker);
+        //outState.putDouble("latitude", mPosition.mLatitude);
+        //print("store latitude " + mPosition.mLatitude);
+        //outState.putDouble("longitude", mPosition.mLongitude);
+        //print("store longitude " + mPosition.mLongitude);
         super.onSaveInstanceState(outState);
     }
 
@@ -191,14 +196,20 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
             mRequestingLocationUpdates = savedInstanceState.getBoolean(REQUESTING_LOCATION_UPDATES_KEY);
         }
-        if (savedInstanceState.keySet().contains("latitude")) {
-            mLongitudeMarker = savedInstanceState.getDouble("longitude");
-            print("found longitude " + mLongitudeMarker);
-        }
-        if (savedInstanceState.keySet().contains("longitude")) {
-            mLatitudeMarker = savedInstanceState.getDouble("latitude");
-            print("found latitude " + mLatitudeMarker);
-        }
+//        if (savedInstanceState.keySet().contains("latitude")) {
+//            if (mPosition == null) {
+//                mPosition = new Position();
+//            }
+//            mPosition.mLongitude = savedInstanceState.getDouble("longitude");
+//            print("found longitude " + mPosition.mLongitude);
+//        }
+//        if (savedInstanceState.keySet().contains("longitude")) {
+//            if (mPosition == null) {
+//                mPosition = new Position();
+//            }
+//            mPosition.mLatitude = savedInstanceState.getDouble("latitude");
+//            print("found latitude " + mPosition.mLatitude);
+//        }
     }
 
     protected void createLocationRequest() {
@@ -233,18 +244,20 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void addMarker(double latitude, double longitude) {
         print("addMarker");
-        mLongitudeMarker = longitude;
-        mLatitudeMarker = latitude;
-        mMarker = mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).draggable(true));
+        Position position = new Position();
+        position.mLongitude = longitude;
+        position.mLatitude = latitude;
+        position.mMarker = mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).draggable(true));
+        mPositions.add(position);
     }
 
-    private void showToast(String text) {
+    public void showToast(String text) {
         print("showToast");
         Toast toast = Toast.makeText(this, text, Toast.LENGTH_LONG);
         toast.show();
     }
 
-    private void showNotification(String title, String text) {
+    public void showNotification(String title, String text) {
         print("showNotification");
         String NOTIFICATION_CHANNEL_ID = "1001";
         String NOTIFICATION_CHANNEL_NAME = "1234";

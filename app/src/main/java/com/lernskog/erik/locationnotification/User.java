@@ -4,3 +4,4 @@ class User {
     double mLatitude;
     double mLongitude;
 }
+

@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -17,6 +19,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,36 +37,48 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+
 public class LocationNotificationActivity extends FragmentActivity implements View.OnClickListener, OnMapReadyCallback {
 
     private static final String TAG = LocationNotificationActivity.class.getSimpleName();
-    private final static String REQUESTING_LOCATION_UPDATES_KEY = "REQUESTING_LOCATION_UPDATES_KEY";
-    private boolean mRequestingLocationUpdates;
     private LocationRequest mLocationRequest;
     private GoogleMap mGoogleMap;
     private LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
     private Button mAddButton;
+    private Button mDelButton;
     public TextView mLatitudeTextView;
     public TextView mLongitudeTextView;
+    public EditText mInfoEditText;
     private User mUser;
     private Positions mPositions;
+    private String mId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        print("onCreate");
+        print("onCreate");xt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_notification);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         mAddButton = findViewById(R.id.button_add);
         mAddButton.setOnClickListener(this);
+        mDelButton = findViewById(R.id.button_del);
+        mDelButton.setOnClickListener(this);
         mLatitudeTextView = findViewById(R.id.textview_latitude);
         mLongitudeTextView = findViewById(R.id.textview_longitude);
+        mInfoEditText = findViewById(R.id.edittext_info);
         createLocationRequest();
         createLocationCallback();
         updateValuesFromBundle(savedInstanceState);
-        mPositions = new Positions(this);
     }
 
     @Override
@@ -91,27 +106,42 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
-                print("onMarkerDragEnd id:" + marker.getId());
+                print("onMarkerDragEnd");
+                showMarker(marker);
             }
         });
-        addMarker(59.858300, 17.647447); //uppsala
-        addMarker(59.725714, 17.786876); //knivsta
-        addMarker(59.646835, 17.924055); //arlanda
-        addMarker(59.521715, 17.899513); //upplandsvasby
-        addMarker(59.476302, 17.914430); //rotebro
-        addMarker(59.458144, 17.924387); //norrviken
-        addMarker(59.444316, 17.932369); //haggvik
-        addMarker(59.428758, 17.948076); //sollentuna
-        addMarker(59.409615, 17.961873); //helenelund
+        mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                print("onMarkerClick");
+                showMarker(marker);
+                return false;
+            }
+        });
+        restore();
+//        addMarker(59.858300, 17.647447); //uppsala
+//        addMarker(59.725714, 17.786876); //knivsta
+//        addMarker(59.646835, 17.924055); //arlanda
+//        addMarker(59.521715, 17.899513); //upplandsvasby
+//        addMarker(59.476302, 17.914430); //rotebro
+//        addMarker(59.458144, 17.924387); //norrviken
+//        addMarker(59.444316, 17.932369); //haggvik
+//        addMarker(59.428758, 17.948076); //sollentuna
+//        addMarker(59.409615, 17.961873); //helenelund
     }
 
+    private void showMarker(Marker marker) {
+        print("onMarkerClick id:" + marker.getId());
+        mId = marker.getId();
+        mLatitudeTextView.setText(String.valueOf(marker.getPosition().latitude));
+        mLongitudeTextView.setText(String.valueOf(marker.getPosition().longitude));
+        mInfoEditText.setText()
+    }
     @Override
     protected void onResume() {
         print("onResume");
         super.onResume();
-        if (mRequestingLocationUpdates) {
-            startLocationUpdates();
-        }
+        startLocationUpdates();
     }
 
     @Override
@@ -131,6 +161,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
+                print("onLocationResult");
                 if (locationResult == null) {
                     return;
                 }
@@ -141,7 +172,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                     mUser.mLatitude = location.getLatitude();
                     mUser.mLongitude = location.getLongitude();
                     mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
-                    print("onLocationResult " + location.getProvider());
                     verifyDistance();
                 }
             }
@@ -150,17 +180,17 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void verifyDistance() {
         print("verifyDistance");
-        mPositions.verifiyDistance(mUser);
+        if (mPositions != null) {
+            mPositions.verifiyDistance(mUser);
+        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         print("onSaveInstanceState");
-        outState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY, mRequestingLocationUpdates);
-        //outState.putDouble("latitude", mPosition.mLatitude);
-        //print("store latitude " + mPosition.mLatitude);
-        //outState.putDouble("longitude", mPosition.mLongitude);
-        //print("store longitude " + mPosition.mLongitude);
+        if (mPositions != null) {
+            store();
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -169,23 +199,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         if (savedInstanceState == null) {
             return;
         }
-        if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
-            mRequestingLocationUpdates = savedInstanceState.getBoolean(REQUESTING_LOCATION_UPDATES_KEY);
-        }
-//        if (savedInstanceState.keySet().contains("latitude")) {
-//            if (mPosition == null) {
-//                mPosition = new Position();
-//            }
-//            mPosition.mLongitude = savedInstanceState.getDouble("longitude");
-//            print("found longitude " + mPosition.mLongitude);
-//        }
-//        if (savedInstanceState.keySet().contains("longitude")) {
-//            if (mPosition == null) {
-//                mPosition = new Position();
-//            }
-//            mPosition.mLatitude = savedInstanceState.getDouble("latitude");
-//            print("found latitude " + mPosition.mLatitude);
-//        }
     }
 
     protected void createLocationRequest() {
@@ -195,7 +208,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mLocationRequest.setFastestInterval(5000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mRequestingLocationUpdates = true;
+        //mRequestingLocationUpdates = true;
     }
 
     private void startLocationUpdates() {
@@ -214,18 +227,43 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     public void onClick(View v) {
         print("onClick");
         if (v == mAddButton) {
-            addMarker(mUser.mLatitude, mUser.mLongitude);
+            if (mUser != null) {
+                addMarker(mUser.mLatitude, mUser.mLongitude);
+            }
+        } else if (v == mDelButton) {
+            delMarker();
         }
     }
 
-    private void addMarker(double latitude, double longitude) {
+    private void delMarker() {
+        if (mId != null) {
+            mLatitudeTextView.setText("");
+            mLongitudeTextView.setText("");
+            mPositions.del(mId);
+            mId = null;
+        }
+    }
+
+    public void addMarker(double latitude, double longitude) {
         print("addMarker");
         Position position = new Position();
         position.mLongitude = longitude;
         position.mLatitude = latitude;
         position.mMarker = mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).draggable(true));
         position.mCircle = mGoogleMap.addCircle(new CircleOptions().center(new LatLng(latitude, longitude)).radius(position.mRadius));
+        if (mPositions == null) {
+            mPositions = new Positions(this);
+        }
         mPositions.add(position);
+
+        Geocoder geocoder = new Geocoder(this);
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            print(addresses.get(0).getAddressLine(0).toString().replace(",",""));
+            position.mInfo = addresses.get(0).getAddressLine(0).toString().replace(",","");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void showToast(String text) {
@@ -264,6 +302,54 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
             noti.flags |= Notification.FLAG_AUTO_CANCEL;
             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             notificationManager.notify(0, noti);
+        }
+    }
+
+    public void store() {
+        print("store");
+        File path = getExternalFilesDir(null);
+        File file = new File(path,"positions.txt");
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            for (String id : mPositions.mPositions.keySet()) {
+                Position position = mPositions.mPositions.get(id);
+                print("id " + id + " latitude " + String.valueOf(position.mLatitude) + " longitude " + String.valueOf(position.mLongitude));
+                fileOutputStream.write(String.valueOf(position.mLatitude).getBytes());
+                fileOutputStream.write(",".getBytes());
+                fileOutputStream.write(String.valueOf(position.mLongitude).getBytes());
+                fileOutputStream.write("\n".getBytes());
+            }
+            fileOutputStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void restore() {
+        print("restore");
+        File path = getExternalFilesDir(null);
+        File file = new File(path,"positions.txt");
+        int length = (int) file.length();
+        byte[] bytes = new byte[length];
+        FileInputStream fileInputStream;
+        String line;
+        try {
+            fileInputStream = new FileInputStream(file);
+            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            while ((line = bufferedReader.readLine()) != null) {
+                print("position " + line);
+                String[] position = line.split("[,]");
+                double latitude = Double.parseDouble(position[0]);
+                double longitude = Double.parseDouble(position[1]);
+                addMarker(latitude, longitude);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -2,30 +2,36 @@ package com.lernskog.erik.locationnotification;
 
 import android.location.Location;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 class Positions {
-    private List<Position> mPositions;
+    public Map<String, Position> mPositions;
     private LocationNotificationActivity mLocationNotificationActivity;
 
     Positions(LocationNotificationActivity locationNotificationActivity) {
         mLocationNotificationActivity = locationNotificationActivity;
-        mPositions = new ArrayList<Position>();
+        mPositions = new HashMap<String, Position>();
     }
 
     public void add(Position position) {
-        mPositions.add(position);
+        mPositions.put(position.mMarker.getId(), position);
+    }
+
+    public void del(String id) {
+        Position position = mPositions.get(id);
+        position.mCircle.remove();
+        position.mMarker.remove();
+        mPositions.remove(id);
     }
 
     public void verifiyDistance(User user) {
         mLocationNotificationActivity.print("user Latitude " + user.mLatitude + " Longitude " + user.mLongitude);
-        for (Position position : mPositions) {
+        for (String id : mPositions.keySet()) {
+            Position position = mPositions.get(id);
             position.mLatitude = position.mMarker.getPosition().latitude;
             position.mLongitude = position.mMarker.getPosition().longitude;
             position.mCircle.setCenter(position.mMarker.getPosition());
-            mLocationNotificationActivity.mLatitudeTextView.setText(String.valueOf(position.mLatitude));
-            mLocationNotificationActivity.mLongitudeTextView.setText(String.valueOf(position.mLongitude));
             Location markerLocation = new Location("marker");
             markerLocation.setLongitude(position.mLongitude);
             markerLocation.setLatitude(position.mLatitude);
@@ -39,6 +45,6 @@ class Positions {
                 mLocationNotificationActivity.showToast("Place " + String.valueOf(distance));
             }
         }
-
     }
 }
+

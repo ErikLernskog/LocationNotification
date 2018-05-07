@@ -9,4 +9,5 @@ class Position {
     public double mLatitude;
     public double mLongitude;
     public float mRadius = 100;
+    public String mInfo;
 }

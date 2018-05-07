@@ -25,6 +25,10 @@ class Positions {
         mPositions.remove(id);
     }
 
+    public Position get(String id){
+        return mPositions.get(id);
+    }
+
     public void verifiyDistance(User user) {
         mLocationNotificationActivity.print("user Latitude " + user.mLatitude + " Longitude " + user.mLongitude);
         for (String id : mPositions.keySet()) {

@@ -16,11 +16,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Del" />
-    <EditText
-        android:id="@+id/edittext_info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
     </LinearLayout>
+    <TextView
+        android:id="@+id/textview_street"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="street"/>
     <TextView
         android:id="@+id/textview_latitude"
         android:layout_width="wrap_content"

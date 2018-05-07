@@ -57,14 +57,14 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     private Button mDelButton;
     public TextView mLatitudeTextView;
     public TextView mLongitudeTextView;
-    public EditText mInfoEditText;
+    public TextView mStreetTextView;
     private User mUser;
     private Positions mPositions;
     private String mId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        print("onCreate");xt
+        print("onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_notification);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -75,7 +75,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mDelButton.setOnClickListener(this);
         mLatitudeTextView = findViewById(R.id.textview_latitude);
         mLongitudeTextView = findViewById(R.id.textview_longitude);
-        mInfoEditText = findViewById(R.id.edittext_info);
+        mStreetTextView = findViewById(R.id.textview_street);
         createLocationRequest();
         createLocationCallback();
         updateValuesFromBundle(savedInstanceState);
@@ -133,10 +133,16 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     private void showMarker(Marker marker) {
         print("onMarkerClick id:" + marker.getId());
         mId = marker.getId();
-        mLatitudeTextView.setText(String.valueOf(marker.getPosition().latitude));
-        mLongitudeTextView.setText(String.valueOf(marker.getPosition().longitude));
-        mInfoEditText.setText()
+        Position position = mPositions.get(marker.getId());
+        double latitude = marker.getPosition().latitude;
+        double longitude = marker.getPosition().longitude;
+        position.mCircle.setCenter(new LatLng(latitude, longitude));
+        position.mInfo = getStreet(latitude, longitude);
+        mLatitudeTextView.setText(String.valueOf(latitude));
+        mLongitudeTextView.setText(String.valueOf(longitude));
+        mStreetTextView.setText(position.mInfo);
     }
+
     @Override
     protected void onResume() {
         print("onResume");
@@ -208,7 +214,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mLocationRequest.setFastestInterval(5000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        //mRequestingLocationUpdates = true;
     }
 
     private void startLocationUpdates() {
@@ -237,6 +242,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void delMarker() {
         if (mId != null) {
+            mStreetTextView.setText("");
             mLatitudeTextView.setText("");
             mLongitudeTextView.setText("");
             mPositions.del(mId);
@@ -251,19 +257,22 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         position.mLatitude = latitude;
         position.mMarker = mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).draggable(true));
         position.mCircle = mGoogleMap.addCircle(new CircleOptions().center(new LatLng(latitude, longitude)).radius(position.mRadius));
+        position.mInfo = getStreet(latitude, longitude);
         if (mPositions == null) {
             mPositions = new Positions(this);
         }
         mPositions.add(position);
+    }
 
+    private String getStreet(double latitude, double longitude) {
         Geocoder geocoder = new Geocoder(this);
         try {
             List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-            print(addresses.get(0).getAddressLine(0).toString().replace(",",""));
-            position.mInfo = addresses.get(0).getAddressLine(0).toString().replace(",","");
+            return addresses.get(0).getAddressLine(0).toString().replace(",","");
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return "";
     }
 
     public void showToast(String text) {

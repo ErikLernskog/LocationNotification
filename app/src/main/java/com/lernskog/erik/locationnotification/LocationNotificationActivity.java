@@ -97,24 +97,26 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
             @Override
             public void onMarkerDragStart(Marker marker) {
                 print("onMarkerDragStart");
+                showMarker(marker, false);
             }
 
             @Override
             public void onMarkerDrag(Marker marker) {
                 print("onMarkerDrag");
+                showMarker(marker, false);
             }
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 print("onMarkerDragEnd");
-                showMarker(marker);
+                showMarker(marker,true);
             }
         });
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
                 print("onMarkerClick");
-                showMarker(marker);
+                showMarker(marker, true);
                 return false;
             }
         });
@@ -130,17 +132,19 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 //        addMarker(59.409615, 17.961873); //helenelund
     }
 
-    private void showMarker(Marker marker) {
+    private void showMarker(Marker marker, boolean updateStreet) {
         print("onMarkerClick id:" + marker.getId());
         mId = marker.getId();
         Position position = mPositions.get(marker.getId());
         double latitude = marker.getPosition().latitude;
         double longitude = marker.getPosition().longitude;
         position.mCircle.setCenter(new LatLng(latitude, longitude));
-        position.mInfo = getStreet(latitude, longitude);
         mLatitudeTextView.setText(String.valueOf(latitude));
         mLongitudeTextView.setText(String.valueOf(longitude));
-        mStreetTextView.setText(position.mInfo);
+        if (updateStreet) {
+            position.mInfo = getStreet(latitude, longitude);
+            mStreetTextView.setText(position.mInfo);
+        }
     }
 
     @Override
@@ -171,17 +175,21 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                 if (locationResult == null) {
                     return;
                 }
-                if (mUser == null) {
-                    mUser = new User();
-                }
                 for (Location location : locationResult.getLocations()) {
-                    mUser.mLatitude = location.getLatitude();
-                    mUser.mLongitude = location.getLongitude();
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+                    updateUser(location.getLatitude(), location.getLongitude());
                     verifyDistance();
                 }
             }
         };
+    }
+
+    private void updateUser(double latitude, double longitude) {
+        if (mUser == null) {
+            mUser = new User();
+        }
+        mUser.mLatitude = latitude;;
+        mUser.mLongitude = longitude;;
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
     }
 
     private void verifyDistance() {

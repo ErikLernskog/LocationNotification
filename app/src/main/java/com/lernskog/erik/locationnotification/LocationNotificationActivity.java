@@ -19,7 +19,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,15 +48,15 @@ import java.util.List;
 public class LocationNotificationActivity extends FragmentActivity implements View.OnClickListener, OnMapReadyCallback {
 
     private static final String TAG = LocationNotificationActivity.class.getSimpleName();
+    public TextView mLatitudeTextView;
+    public TextView mLongitudeTextView;
+    public TextView mStreetTextView;
     private LocationRequest mLocationRequest;
     private GoogleMap mGoogleMap;
     private LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
     private Button mAddButton;
     private Button mDelButton;
-    public TextView mLatitudeTextView;
-    public TextView mLongitudeTextView;
-    public TextView mStreetTextView;
     private User mUser;
     private Positions mPositions;
     private String mId;
@@ -78,7 +77,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mStreetTextView = findViewById(R.id.textview_street);
         createLocationRequest();
         createLocationCallback();
-        updateValuesFromBundle(savedInstanceState);
+        //updateValuesFromBundle(savedInstanceState);
     }
 
     @Override
@@ -124,9 +123,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mGoogleMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
             @Override
             public boolean onMyLocationButtonClick() {
-                mStreetTextView.setText("");
-                mLatitudeTextView.setText("");
-                mLongitudeTextView.setText("");
+                mStreetTextView.setText("Street:");
+                mLatitudeTextView.setText("Latitude:");
+                mLongitudeTextView.setText("Longitude:");
                 mId = null;
                 return false;
             }
@@ -150,11 +149,15 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         double latitude = marker.getPosition().latitude;
         double longitude = marker.getPosition().longitude;
         position.mCircle.setCenter(new LatLng(latitude, longitude));
-        mLatitudeTextView.setText(String.valueOf(latitude));
-        mLongitudeTextView.setText(String.valueOf(longitude));
+        String title = position.mInfo;
+        position.mMarker.setTitle(title);
+        String snippet = "Lati: " + String.valueOf(latitude) + " Long: " + String.valueOf(longitude);
+        position.mMarker.setSnippet(snippet);
+        mLatitudeTextView.setText("Latitude: " + String.valueOf(latitude));
+        mLongitudeTextView.setText("Longitude: " + String.valueOf(longitude));
         if (updateStreet) {
             position.mInfo = getStreet(latitude, longitude);
-            mStreetTextView.setText(position.mInfo);
+            mStreetTextView.setText("Street: " + position.mInfo);
         }
     }
 
@@ -221,12 +224,12 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         super.onSaveInstanceState(outState);
     }
 
-    private void updateValuesFromBundle(Bundle savedInstanceState) {
-        print("updateValuesFromBundel");
-        if (savedInstanceState == null) {
-            return;
-        }
-    }
+//    private void updateValuesFromBundle(Bundle savedInstanceState) {
+//        print("updateValuesFromBundel");
+//        if (savedInstanceState == null) {
+//            return;
+//        }
+//    }
 
     protected void createLocationRequest() {
         print("createLocationRequest");
@@ -263,9 +266,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void delMarker() {
         if (mId != null) {
-            mStreetTextView.setText("");
-            mLatitudeTextView.setText("");
-            mLongitudeTextView.setText("");
+            mStreetTextView.setText("Street:");
+            mLatitudeTextView.setText("Latitude:");
+            mLongitudeTextView.setText("Longitude:");
             mPositions.del(mId);
             mId = null;
         }

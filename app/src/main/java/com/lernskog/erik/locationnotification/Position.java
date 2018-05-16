@@ -8,6 +8,6 @@ class Position {
     public Circle mCircle;
     public double mLatitude;
     public double mLongitude;
-    public float mRadius = 100;
+    public float mRadius = 200;
     public String mInfo;
 }

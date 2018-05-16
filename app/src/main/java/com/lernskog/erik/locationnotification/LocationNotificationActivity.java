@@ -120,6 +120,17 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                 return false;
             }
         });
+
+        mGoogleMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
+            @Override
+            public boolean onMyLocationButtonClick() {
+                mStreetTextView.setText("");
+                mLatitudeTextView.setText("");
+                mLongitudeTextView.setText("");
+                mId = null;
+                return false;
+            }
+        });
         restore();
 //        addMarker(59.858300, 17.647447); //uppsala
 //        addMarker(59.725714, 17.786876); //knivsta
@@ -158,7 +169,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     protected void onPause() {
         print("onPause");
         super.onPause();
-        stopLocationUpdates();
+        //stopLocationUpdates();
     }
 
     private void stopLocationUpdates() {
@@ -189,7 +200,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         }
         mUser.mLatitude = latitude;;
         mUser.mLongitude = longitude;;
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
+        if (mId == null) {
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
+        }
     }
 
     private void verifyDistance() {

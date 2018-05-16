@@ -2,36 +2,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+
         <Button
-        android:id="@+id/button_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Add" />
-    <Button
-        android:id="@+id/button_del"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Del" />
+            android:id="@+id/button_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add" />
+
+        <Button
+            android:id="@+id/button_del"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Del" />
     </LinearLayout>
+
     <TextView
         android:id="@+id/textview_street"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="street"/>
+        android:text="street" />
+
     <TextView
         android:id="@+id/textview_latitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="latitude"/>
+        android:text="latitude" />
+
     <TextView
         android:id="@+id/textview_longitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="longitude"/>
+        android:text="longitude" />
+
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/map"

@@ -45,8 +45,9 @@ class Positions {
             float distance = userLocation.distanceTo(markerLocation);
             mLocationNotificationActivity.print("marker id " + position.mMarker.getId() + " Latitude " + position.mLatitude + " Longitude " + position.mLongitude + " distance " + distance);
             if (distance < position.mRadius) {
-                mLocationNotificationActivity.showNotification("Place", String.valueOf(distance));
-                mLocationNotificationActivity.showToast("Place " + String.valueOf(distance));
+                String info = "" + position.mLatitude + " " + position.mLongitude + " " + position.mInfo + " " + String.valueOf(distance);
+                mLocationNotificationActivity.showNotification("At location ", info);
+                mLocationNotificationActivity.showToast("At location " + info);
             }
         }
     }

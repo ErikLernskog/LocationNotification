@@ -19,7 +19,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -48,9 +47,6 @@ import java.util.List;
 public class LocationNotificationActivity extends FragmentActivity implements View.OnClickListener, OnMapReadyCallback {
 
     private static final String TAG = LocationNotificationActivity.class.getSimpleName();
-    public TextView mLatitudeTextView;
-    public TextView mLongitudeTextView;
-    public TextView mStreetTextView;
     private LocationRequest mLocationRequest;
     private GoogleMap mGoogleMap;
     private LocationCallback mLocationCallback;
@@ -72,12 +68,8 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mAddButton.setOnClickListener(this);
         mDelButton = findViewById(R.id.button_del);
         mDelButton.setOnClickListener(this);
-        mLatitudeTextView = findViewById(R.id.textview_latitude);
-        mLongitudeTextView = findViewById(R.id.textview_longitude);
-        mStreetTextView = findViewById(R.id.textview_street);
         createLocationRequest();
         createLocationCallback();
-        //updateValuesFromBundle(savedInstanceState);
     }
 
     @Override
@@ -124,9 +116,10 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
             @Override
             public boolean onMyLocationButtonClick() {
                 print("onMyLocationButtonClick");
-                mStreetTextView.setText("Street:");
-                mLatitudeTextView.setText("Latitude:");
-                mLongitudeTextView.setText("Longitude:");
+                if (mId != null) {
+                    Position position = mPositions.get(mId);
+                    position.mMarker.hideInfoWindow();
+                }
                 mId = null;
                 return false;
             }
@@ -150,11 +143,8 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         double latitude = marker.getPosition().latitude;
         double longitude = marker.getPosition().longitude;
         position.mCircle.setCenter(new LatLng(latitude, longitude));
-        mLatitudeTextView.setText("Latitude: " + String.valueOf(latitude));
-        mLongitudeTextView.setText("Longitude: " + String.valueOf(longitude));
         if (updateStreet) {
             position.mStreet = getStreet(latitude, longitude);
-            mStreetTextView.setText("Street: " + position.mStreet);
         }
         String title = position.mStreet;
         position.mMarker.setTitle(title);
@@ -174,13 +164,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     protected void onPause() {
         print("onPause");
         super.onPause();
-        //stopLocationUpdates();
     }
-
-//    private void stopLocationUpdates() {
-//        print("stopLocationUpdates");
-//        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-//    }
 
     protected void createLocationCallback() {
         print("createLocationCallback");
@@ -227,13 +211,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         super.onSaveInstanceState(outState);
     }
 
-//    private void updateValuesFromBundle(Bundle savedInstanceState) {
-//        print("updateValuesFromBundel");
-//        if (savedInstanceState == null) {
-//            return;
-//        }
-//    }
-
     protected void createLocationRequest() {
         print("createLocationRequest");
         mLocationRequest = new LocationRequest();
@@ -270,9 +247,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     private void delMarker() {
         print("delMarker");
         if (mId != null) {
-            mStreetTextView.setText("Street:");
-            mLatitudeTextView.setText("Latitude:");
-            mLongitudeTextView.setText("Longitude:");
             mPositions.del(mId);
             mId = null;
         }

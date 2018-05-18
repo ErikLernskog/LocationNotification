@@ -123,6 +123,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mGoogleMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
             @Override
             public boolean onMyLocationButtonClick() {
+                print("onMyLocationButtonClick");
                 mStreetTextView.setText("Street:");
                 mLatitudeTextView.setText("Latitude:");
                 mLongitudeTextView.setText("Longitude:");
@@ -143,22 +144,23 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     }
 
     private void showMarker(Marker marker, boolean updateStreet) {
-        print("onMarkerClick id:" + marker.getId());
+        print("showMarker id:" + marker.getId());
         mId = marker.getId();
         Position position = mPositions.get(marker.getId());
         double latitude = marker.getPosition().latitude;
         double longitude = marker.getPosition().longitude;
         position.mCircle.setCenter(new LatLng(latitude, longitude));
-        String title = position.mInfo;
-        position.mMarker.setTitle(title);
-        String snippet = "Lati: " + String.valueOf(latitude) + " Long: " + String.valueOf(longitude);
-        position.mMarker.setSnippet(snippet);
         mLatitudeTextView.setText("Latitude: " + String.valueOf(latitude));
         mLongitudeTextView.setText("Longitude: " + String.valueOf(longitude));
         if (updateStreet) {
-            position.mInfo = getStreet(latitude, longitude);
-            mStreetTextView.setText("Street: " + position.mInfo);
+            position.mStreet = getStreet(latitude, longitude);
+            mStreetTextView.setText("Street: " + position.mStreet);
         }
+        String title = position.mStreet;
+        position.mMarker.setTitle(title);
+        String snippet = String.valueOf(latitude) + ", " + String.valueOf(longitude);
+        position.mMarker.setSnippet(snippet);
+        position.mMarker.showInfoWindow();
     }
 
     @Override
@@ -175,10 +177,10 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         //stopLocationUpdates();
     }
 
-    private void stopLocationUpdates() {
-        print("stopLocationUpdates");
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-    }
+//    private void stopLocationUpdates() {
+//        print("stopLocationUpdates");
+//        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+//    }
 
     protected void createLocationCallback() {
         print("createLocationCallback");
@@ -198,6 +200,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     }
 
     private void updateUser(double latitude, double longitude) {
+        print("updateUser");
         if (mUser == null) {
             mUser = new User();
         }
@@ -265,6 +268,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     }
 
     private void delMarker() {
+        print("delMarker");
         if (mId != null) {
             mStreetTextView.setText("Street:");
             mLatitudeTextView.setText("Latitude:");
@@ -281,7 +285,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         position.mLatitude = latitude;
         position.mMarker = mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).draggable(true));
         position.mCircle = mGoogleMap.addCircle(new CircleOptions().center(new LatLng(latitude, longitude)).radius(position.mRadius));
-        position.mInfo = getStreet(latitude, longitude);
+        position.mStreet = getStreet(latitude, longitude);
         if (mPositions == null) {
             mPositions = new Positions(this);
         }
@@ -289,6 +293,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     }
 
     private String getStreet(double latitude, double longitude) {
+        print("getStreet");
         Geocoder geocoder = new Geocoder(this);
         try {
             List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);

@@ -70,14 +70,26 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mDelButton.setOnClickListener(this);
         createLocationRequest();
         createLocationCallback();
+        checkPermission();
+    }
+
+    private boolean checkPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         print("onMapReady");
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (checkPermission()) {
             return;
         }
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+//        }
         mGoogleMap = googleMap;
         mGoogleMap.setMyLocationEnabled(true);
         mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
@@ -222,9 +234,12 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void startLocationUpdates() {
         print("startLocationUpdates");
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (checkPermission()) {
             return;
         }
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+//        }
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
     }
 
@@ -278,9 +293,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         return "";
     }
 
-    public void showToast(String text) {
+    public void showToast(String title, String text) {
         print("showToast");
-        Toast toast = Toast.makeText(this, text, Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(this, title + text, Toast.LENGTH_LONG);
         toast.show();
     }
 

@@ -70,27 +70,50 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mDelButton.setOnClickListener(this);
         createLocationRequest();
         createLocationCallback();
-        checkPermission();
+        checkAndRequestPermission();
     }
 
-    private boolean checkPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-            return true;
+    @Override
+    protected void onResume() {
+        print("onResume");
+        super.onResume();
+        startLocationUpdates();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        print("onSaveInstanceState");
+        store();
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onClick(View v) {
+        print("onClick");
+        if (v == mAddButton) {
+            if (mUser != null) {
+                addMarker(mUser.mLatitude, mUser.mLongitude);
+            }
+        } else if (v == mDelButton) {
+            delMarker();
         }
-        return false;
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         print("onMapReady");
-        if (checkPermission()) {
+        mGoogleMap = googleMap;
+        if (checkAndRequestPermission()) {
             return;
         }
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            return;
-//        }
-        mGoogleMap = googleMap;
+        setupMap();
+        restore();
+    }
+
+    private void setupMap() {
+        if (checkAndRequestPermission()) {
+            return;
+        }
         mGoogleMap.setMyLocationEnabled(true);
         mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
         mGoogleMap.getUiSettings().setCompassEnabled(true);
@@ -136,7 +159,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                 return false;
             }
         });
-        restore();
 //        addMarker(59.858300, 17.647447); //uppsala
 //        addMarker(59.725714, 17.786876); //knivsta
 //        addMarker(59.646835, 17.924055); //arlanda
@@ -146,6 +168,14 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 //        addMarker(59.444316, 17.932369); //haggvik
 //        addMarker(59.428758, 17.948076); //sollentuna
 //        addMarker(59.409615, 17.961873); //helenelund
+    }
+
+    private boolean checkAndRequestPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return true;
+        }
+        return false;
     }
 
     private void showMarker(Marker marker, boolean updateStreet) {
@@ -163,19 +193,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         String snippet = String.valueOf(latitude) + ", " + String.valueOf(longitude);
         position.mMarker.setSnippet(snippet);
         position.mMarker.showInfoWindow();
-    }
-
-    @Override
-    protected void onResume() {
-        print("onResume");
-        super.onResume();
-        startLocationUpdates();
-    }
-
-    @Override
-    protected void onPause() {
-        print("onPause");
-        super.onPause();
     }
 
     protected void createLocationCallback() {
@@ -200,9 +217,15 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         if (mUser == null) {
             mUser = new User();
         }
-        mUser.mLatitude = latitude;;
-        mUser.mLongitude = longitude;;
+        mUser.mLatitude = latitude;
+        mUser.mLongitude = longitude;
+        if (mGoogleMap == null) {
+            return;
+        }
         if (mId == null) {
+            if (mGoogleMap.isMyLocationEnabled() == false) {
+                setupMap();
+            }
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
         }
     }
@@ -212,15 +235,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         if (mPositions != null) {
             mPositions.verifiyDistance(mUser);
         }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        print("onSaveInstanceState");
-        if (mPositions != null) {
-            store();
-        }
-        super.onSaveInstanceState(outState);
     }
 
     protected void createLocationRequest() {
@@ -234,29 +248,10 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     private void startLocationUpdates() {
         print("startLocationUpdates");
-        if (checkPermission()) {
+        if (checkAndRequestPermission()) {
             return;
         }
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            return;
-//        }
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-    }
-
-    public void print(final String message) {
-        Log.d(TAG, message);
-    }
-
-    @Override
-    public void onClick(View v) {
-        print("onClick");
-        if (v == mAddButton) {
-            if (mUser != null) {
-                addMarker(mUser.mLatitude, mUser.mLongitude);
-            }
-        } else if (v == mDelButton) {
-            delMarker();
-        }
     }
 
     private void delMarker() {
@@ -334,6 +329,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
 
     public void store() {
         print("store");
+        if (mPositions == null) {
+            return;
+        }
         File path = getExternalFilesDir(null);
         File file = new File(path,"positions.txt");
         try {
@@ -379,4 +377,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
             e.printStackTrace();
         }
     }
+
+    public void print(final String message) {
+        Log.d(TAG, message);
+    }
+
 }

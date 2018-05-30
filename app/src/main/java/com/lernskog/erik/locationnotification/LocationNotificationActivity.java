@@ -68,9 +68,9 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         mAddButton.setOnClickListener(this);
         mDelButton = findViewById(R.id.button_del);
         mDelButton.setOnClickListener(this);
+        checkAndRequestPermission();
         createLocationRequest();
         createLocationCallback();
-        checkAndRequestPermission();
     }
 
     @Override
@@ -138,6 +138,7 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
                 showMarker(marker,true);
             }
         });
+
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -201,15 +202,32 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 print("onLocationResult");
-                if (locationResult == null) {
-                    return;
-                }
+//                if (locationResult == null) {
+//                    return;
+//                }
                 for (Location location : locationResult.getLocations()) {
                     updateUser(location.getLatitude(), location.getLongitude());
                     verifyDistance();
                 }
             }
         };
+    }
+
+    protected void createLocationRequest() {
+        print("createLocationRequest");
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+    }
+
+    private void startLocationUpdates() {
+        print("startLocationUpdates");
+        if (checkAndRequestPermission()) {
+            return;
+        }
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
     }
 
     private void updateUser(double latitude, double longitude) {
@@ -235,23 +253,6 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
         if (mPositions != null) {
             mPositions.verifiyDistance(mUser);
         }
-    }
-
-    protected void createLocationRequest() {
-        print("createLocationRequest");
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-    }
-
-    private void startLocationUpdates() {
-        print("startLocationUpdates");
-        if (checkAndRequestPermission()) {
-            return;
-        }
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
     }
 
     private void delMarker() {
@@ -381,5 +382,4 @@ public class LocationNotificationActivity extends FragmentActivity implements Vi
     public void print(final String message) {
         Log.d(TAG, message);
     }
-
 }
